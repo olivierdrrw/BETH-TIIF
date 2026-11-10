@@ -1,0 +1,276 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return signedIn() && request.auth.token.role == role;
+    }
+
+    function hasAnyRole(roles) {
+      return signedIn() && request.auth.token.role in roles;
+    }
+
+    function isSuperAdmin() {
+      return hasRole('super_admin');
+    }
+
+    function isAdmin() {
+      return hasAnyRole(['super_admin', 'tenant_admin', 'institution_admin']);
+    }
+
+    function isStaffRole() {
+      return hasAnyRole(['super_admin', 'tenant_admin', 'institution_admin', 'therapist', 'researcher']);
+    }
+
+    function conversationParticipant(conversationId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/conversations/$(conversationId))
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+    }
+
+    // User profiles: users may edit their own profile, never their role or billing entitlements.
+    match /users/{userId} {
+      allow create: if owner(userId)
+        && (!('role' in request.resource.data) || request.resource.data.role == 'member')
+        && (!('plan' in request.resource.data) || request.resource.data.plan == 'free');
+      allow read: if owner(userId) || isSuperAdmin();
+      allow update: if owner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'role', 'isAdmin', 'permissions', 'plan', 'subscriptionStatus',
+          'stripeCustomerId', 'stripeSubscriptionId', 'billingUpdatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /roles/{userId} {
+      allow read: if owner(userId) || isSuperAdmin();
+      allow write: if false; // Admin SDK only.
+    }
+
+    match /human_twins/{userId} {
+      allow read, write: if owner(userId);
+    }
+
+    match /companion_avatars/{userId} {
+      allow read, write: if owner(userId);
+    }
+
+    match /journals/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /assessments/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /wellness_metrics/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /wellness_logs/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /moodEntries/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /habits/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /savedArticles/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /ai_sessions/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /calendar_events/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /notifications/{entryId} {
+      allow read, update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /impact_snapshots/{entryId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /risk_alerts/{entryId} {
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid
+        || isSuperAdmin()
+        || (hasRole('therapist') && resource.data.therapistId == request.auth.uid));
+      allow write: if false;
+    }
+
+    match /therapy_bookings/{bookingId} {
+      allow read: if signedIn() && (
+        resource.data.userId == request.auth.uid
+        || (hasRole('therapist') && resource.data.therapistId == request.auth.uid)
+        || isAdmin()
+      );
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if signedIn() && (
+        (resource.data.userId == request.auth.uid
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+        || ((hasRole('therapist') && resource.data.therapistId == request.auth.uid) || isAdmin())
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['confirmed', 'completed', 'cancelled']
+      );
+      allow delete: if false;
+    }
+
+    match /therapists/{therapistId} {
+      allow read: if signedIn();
+      allow create, update: if (hasRole('therapist') && owner(therapistId)) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /community_posts/{postId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if signedIn() && (
+        resource.data.authorId == request.auth.uid
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+          && request.resource.data.likes == resource.data.likes + 1)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments'])
+          && request.resource.data.comments == resource.data.comments + 1)
+      );
+      allow delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
+        allow update, delete: if signedIn() && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    match /community_groups/{groupId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /community_challenges/{challengeId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /mentor_circles/{circleId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /community_events/{eventId} {
+      allow read: if signedIn();
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendeeCount'])
+        && request.resource.data.attendeeCount == resource.data.attendeeCount + 1
+        && !exists(/databases/$(database)/documents/community_events/$(eventId)/rsvps/$(request.auth.uid))
+        && existsAfter(/databases/$(database)/documents/community_events/$(eventId)/rsvps/$(request.auth.uid));
+      allow create, delete: if isAdmin();
+
+      match /rsvps/{userId} {
+        allow read: if owner(userId) || isSuperAdmin();
+        allow create: if owner(userId)
+          && !exists(/databases/$(database)/documents/community_events/$(eventId)/rsvps/$(userId))
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // Messaging uses top-level /messages and /conversations collections in the client repository.
+    match /conversations/{conversationId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.participants;
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.participants.size() == 2;
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.participants
+        && request.resource.data.participants == resource.data.participants
+        && request.resource.data.lastSenderId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage', 'lastSenderId', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    match /messages/{messageId} {
+      allow read: if conversationParticipant(resource.data.conversationId);
+      allow create: if signedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 10000
+        && conversationParticipant(request.resource.data.conversationId);
+      allow update, delete: if false;
+    }
+
+    match /presence/{userId} {
+      allow read: if signedIn();
+      allow write: if owner(userId);
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if signedIn();
+      allow write: if owner(userId);
+    }
+
+    match /feedback/{entryId} {
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isSuperAdmin();
+      allow update, delete: if false;
+    }
+
+    match /institutions/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /schools/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /regions/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /research_data/{docId} {
+      allow read: if isStaffRole();
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /reports/{docId} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

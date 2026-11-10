@@ -1,0 +1,314 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =====================================
+   TIIF DESIGN SYSTEM TOKENS
+===================================== */
+
+:root {
+  --tiif-primary: #1F2D63;
+  --tiif-primary-light: #2E428E;
+
+  --tiif-background: #060B18;
+
+  --tiif-surface: rgba(255, 255, 255, 0.04);
+  --tiif-card: rgba(255, 255, 255, 0.05);
+
+  --tiif-border: rgba(255, 255, 255, 0.08);
+
+  --tiif-text: #F8FAFC;
+  --tiif-muted: #94A3B8;
+
+  --tiif-accent: #3E63B0;
+
+  --tiif-glow: rgba(31, 45, 99, 0.35);
+
+  --tiif-radius: 28px;
+
+  /* Deep Navy Blue scale — every accent/semantic color in the app
+     resolves to a step on this scale instead of a separate hue. */
+  --navy-50: #EEF2FB;
+  --navy-100: #D6E0F5;
+  --navy-200: #AEC2EA;
+  --navy-300: #85A3DE;
+  --navy-400: #5D85D1;
+  --navy-500: #3E63B0;
+  --navy-600: #304D8C;
+  --navy-700: #263D70;
+  --navy-800: #1F2D63;
+  --navy-900: #141D42;
+  --navy-950: #060B18;
+
+  /* Single muted accent, reserved for genuine success/positive states
+     (goal completed, positive trend, etc). Every other color stays navy. */
+  --success-300: #9BCDB0;
+  --success-400: #6EB68C;
+  --success-500: #4C9B70;
+  --success-600: #397A57;
+}
+
+
+/* =====================================
+   TAILWIND v4 THEME CONNECTION
+===================================== */
+
+@theme {
+  --color-background: var(--tiif-background);
+  --color-primary: var(--tiif-primary);
+
+  --color-muted-foreground: var(--tiif-muted);
+
+  --color-accent: var(--tiif-accent);
+
+  --color-border: var(--tiif-border);
+
+  --radius-tiif: var(--tiif-radius);
+
+  --color-navy-50: var(--navy-50);
+  --color-navy-100: var(--navy-100);
+  --color-navy-200: var(--navy-200);
+  --color-navy-300: var(--navy-300);
+  --color-navy-400: var(--navy-400);
+  --color-navy-500: var(--navy-500);
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
+
+  --color-success-300: var(--success-300);
+  --color-success-400: var(--success-400);
+  --color-success-500: var(--success-500);
+  --color-success-600: var(--success-600);
+}
+
+
+/* =====================================
+   GLOBAL
+===================================== */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
+}
+
+
+body {
+  margin: 0;
+  padding: 0;
+
+  color: var(--tiif-text);
+
+  background: var(--tiif-background);
+
+  font-feature-settings: "rlig", "calt";
+
+  overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+#__next,
+body > div {
+  position: relative;
+  z-index: 2;
+}
+
+
+/* =====================================
+   SELECTION
+===================================== */
+
+::selection {
+  background: var(--navy-500);
+  color: white;
+}
+
+
+/* =====================================
+   SCROLLBAR
+===================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+
+::-webkit-scrollbar-thumb {
+  background: #1F2D63;
+  border-radius: 999px;
+}
+
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+/* =====================================
+   GLASS SYSTEM
+===================================== */
+
+.tiif-glass {
+
+  background: rgba(255,255,255,.04);
+
+  backdrop-filter: blur(28px);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+}
+
+
+/* =====================================
+   GLOW SYSTEM
+===================================== */
+
+.tiif-glow {
+
+  box-shadow:
+    0 0 80px rgba(31,45,99,.30);
+
+}
+
+
+/* =====================================
+   CARD SYSTEM
+===================================== */
+
+.tiif-card {
+
+  background: rgba(255,255,255,.04);
+
+  backdrop-filter: blur(24px);
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  border-radius: 28px;
+
+  transition: all .45s ease;
+
+}
+
+
+.tiif-card:hover {
+
+  transform: translateY(-6px);
+
+  border-color: rgba(93,133,209,.25);
+
+  box-shadow:
+
+    0 30px 80px rgba(0,0,0,.40),
+
+    0 0 60px rgba(31,45,99,.20);
+
+}
+
+
+/* =====================================
+   BUTTON SYSTEM
+===================================== */
+
+.tiif-button {
+
+  transition: .35s;
+
+}
+
+
+.tiif-button:hover {
+
+  transform: translateY(-2px);
+
+}
+
+
+/* =====================================
+   HERO BACKGROUND
+===================================== */
+
+.tiif-background {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: -1;
+
+  background:
+
+    radial-gradient(
+      circle at top,
+      #1F2D6335,
+      transparent 45%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      #304D8C20,
+      transparent 35%
+    ),
+
+    #060B18;
+
+}
+/* =====================================
+   FORM INPUTS (shared utility)
+===================================== */
+
+.input {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #ffffff;
+}
+
+.input::placeholder {
+  color: #475569;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(93, 133, 209, 0.5);
+}
+
+/* =====================================
+   PRINT / PDF EXPORT
+===================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+.print-only {
+  display: none;
+}
