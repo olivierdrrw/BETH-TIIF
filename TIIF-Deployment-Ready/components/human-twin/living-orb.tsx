@@ -2,21 +2,32 @@
 
 import { motion } from "framer-motion";
 
-export default function LivingOrb() {
+interface LivingOrbProps {
+  /** Diameter of the visual orb in pixels. Defaults to 256. */
+  size?: number;
+}
+
+export default function LivingOrb({ size = 256 }: LivingOrbProps) {
+  const ring = (multiplier: number) => Math.round(size * multiplier);
+
   return (
-    <div className="relative flex items-center justify-center">
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+      aria-label="Animated Human Twin orb"
+      role="img"
+    >
 
       {/* OUTER AURA */}
 
       <motion.div
         className="
           absolute
-          h-64
-          w-64
           rounded-full
           bg-navy-500/10
           blur-[90px]
         "
+        style={{ width: ring(1), height: ring(1) }}
         animate={{
           scale: [1, 1.08, 1],
           opacity: [0.4, 0.7, 0.4],
@@ -32,12 +43,11 @@ export default function LivingOrb() {
       <motion.div
         className="
           absolute
-          h-56
-          w-56
           rounded-full
           border
           border-navy-400/20
         "
+        style={{ width: ring(0.875), height: ring(0.875) }}
         animate={{
           rotate: 360,
         }}
@@ -53,12 +63,11 @@ export default function LivingOrb() {
       <motion.div
         className="
           absolute
-          h-48
-          w-48
           rounded-full
           border
           border-navy-300/20
         "
+        style={{ width: ring(0.75), height: ring(0.75) }}
         animate={{
           rotate: -360,
         }}
@@ -75,8 +84,6 @@ export default function LivingOrb() {
         className="
           relative
 
-          h-32
-          w-32
 
           rounded-full
 
@@ -90,6 +97,7 @@ export default function LivingOrb() {
 
           shadow-[0_0_70px_rgba(93, 133, 209,.5)]
         "
+        style={{ width: ring(0.5), height: ring(0.5) }}
         animate={{
           scale: [1, 1.05, 1],
         }}
@@ -101,14 +109,13 @@ export default function LivingOrb() {
         <motion.div
           className="
             absolute
-            inset-4
-
             rounded-full
 
             bg-white/20
 
             backdrop-blur-xl
           "
+          style={{ inset: ring(0.0625) }}
           animate={{
             opacity: [0.3, 0.6, 0.3],
           }}

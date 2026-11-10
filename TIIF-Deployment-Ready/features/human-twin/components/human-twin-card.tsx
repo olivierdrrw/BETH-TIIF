@@ -3,7 +3,7 @@
 import {
   useHumanTwinStore,
 }
-from "../store/human-twin-store";
+from "@/stores/human-twin-store";
 
 export function HumanTwinCard() {
 
@@ -43,25 +43,25 @@ export function HumanTwinCard() {
       <p>
         Level:
         {" "}
-        {twin.level}
+        {twin.currentLevel ?? 1}
       </p>
 
       <p>
         Identity:
         {" "}
-        {twin.identityScore}
+        {twin.identityScore ?? 0}
       </p>
 
       <p>
         Growth:
         {" "}
-        {twin.growthScore}
+        {twin.growthScore ?? 0}
       </p>
 
       <p>
         Impact:
         {" "}
-        {twin.impactScore}
+        {twin.impactScore ?? 0}
       </p>
 
     </div>

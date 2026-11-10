@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -64,9 +64,10 @@ const cardVariants = cva(
 // ---------------------------------------------------------------------------
 
 export interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<HTMLMotionProps<"div">, "ref" | "children" | "onClick">,
     VariantProps<typeof cardVariants> {
   onClick?: () => void;
+  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------

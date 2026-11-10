@@ -1,46 +1,17 @@
 "use client";
 
-import {
-  useEffect,
-} from "react";
+import { useEffect } from "react";
+import { subscribeToHumanTwin } from "../realtime/human-twin-listener";
+import { useHumanTwinStore } from "@/stores/human-twin-store";
 
-import {
-  subscribeToHumanTwin,
-}
-from "../realtime/human-twin-listener";
-
-import {
-  useHumanTwinStore,
-}
-from "../store/human-twin-store";
-
-export function useHumanTwin(
-  userId: string
-) {
-
-  const {
-    setTwin,
-  } = useHumanTwinStore();
+export function useHumanTwin(userId: string) {
+  const updateTwin = useHumanTwinStore((state) => state.updateTwin);
 
   useEffect(() => {
+    if (!userId) return;
 
-    const unsubscribe =
-
-      subscribeToHumanTwin(
-
-        userId,
-
-        (data) => {
-
-          setTwin(data);
-
-        }
-
-      );
-
-    return () =>
-      unsubscribe();
-
-  }, [userId]);
-
+    return subscribeToHumanTwin(userId, (data) => {
+      if (data) updateTwin(data);
+    });
+  }, [userId, updateTwin]);
 }

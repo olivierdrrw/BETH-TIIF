@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { saveScreenerResult } from "./screener-repository";
+import { scoreGAD7 } from "./gad7";
+import { scorePHQ9 } from "./phq9";
 
 interface ScreenerFlowProps {
   screenerId: "phq9" | "gad7";
   title: string;
   questions: string[];
   options: { label: string; value: number }[];
-  score: (answers: number[]) => { total: number; severity: string };
   maxScore: number;
 }
 
@@ -27,14 +28,16 @@ export function ScreenerFlow({
   title,
   questions,
   options,
-  score,
   maxScore,
 }: ScreenerFlowProps) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
-  const [result, setResult] = useState<{ total: number; severity: string } | null>(null);
+  const [result, setResult] = useState<{
+    total: number;
+    severity: string;
+  } | null>(null);
 
   async function handleAnswer(value: number) {
     const next = [...answers, value];
@@ -45,7 +48,10 @@ export function ScreenerFlow({
       return;
     }
 
-    const scored = score(next);
+    // Scoring stays inside this Client Component.
+    const scored =
+      screenerId === "gad7" ? scoreGAD7(next) : scorePHQ9(next);
+
     setResult(scored);
 
     if (user?.uid) {
@@ -62,7 +68,9 @@ export function ScreenerFlow({
   if (result) {
     return (
       <div className="mx-auto max-w-xl space-y-6 rounded-3xl border border-white/10 bg-white/[0.02] p-8 text-center">
-        <p className="text-sm uppercase tracking-wide text-slate-500">{title} result</p>
+        <p className="text-sm uppercase tracking-wide text-slate-500">
+          {title} result
+        </p>
 
         <p className="text-5xl font-bold text-white">
           {result.total}
@@ -74,9 +82,9 @@ export function ScreenerFlow({
         </p>
 
         <p className="text-sm leading-6 text-slate-400">
-          This screening tool can help you understand your symptoms, but it isn't a
-          diagnosis. Consider sharing this result with a doctor or therapist,
-          especially if your score is in the moderate-to-severe range.
+          This screening tool can help you understand your symptoms, but it
+          isn't a diagnosis. Consider sharing this result with a doctor or
+          therapist, especially if your score is in the moderate-to-severe range.
         </p>
 
         <button
@@ -103,8 +111,13 @@ export function ScreenerFlow({
       </div>
 
       <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8">
-        <p className="text-sm text-slate-500">Over the last 2 weeks, how often have you been bothered by:</p>
-        <p className="mt-3 text-lg font-medium text-white">{questions[step]}</p>
+        <p className="text-sm text-slate-500">
+          Over the last 2 weeks, how often have you been bothered by:
+        </p>
+
+        <p className="mt-3 text-lg font-medium text-white">
+          {questions[step]}
+        </p>
 
         <div className="mt-6 space-y-2">
           {options.map((opt) => (

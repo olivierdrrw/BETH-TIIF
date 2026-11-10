@@ -3,7 +3,7 @@
 import {
  useOnboardingStore
 }
-from "@/features/onboarding/store/onboarding-store";
+from "@/app/onboarding/onboarding-store";
 
 export function GoalsStep(){
 

@@ -21,7 +21,7 @@ interface DirectoryUser {
   lastName?: string;
 }
 
-function nameFor(u: DirectoryUser | undefined) {
+function nameFor(u: DirectoryUser | null | undefined) {
   if (!u) return "Unknown";
   return [u.firstName, u.lastName].filter(Boolean).join(" ") || u.email || "Unknown";
 }
