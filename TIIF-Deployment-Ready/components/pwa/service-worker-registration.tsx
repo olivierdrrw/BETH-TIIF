@@ -4,12 +4,24 @@ import { useEffect } from "react";
 
 export function ServiceWorkerRegistration() {
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        // Silently ignore — offline support is a progressive enhancement,
-        // not a requirement for the app to function.
+    if (!("serviceWorker" in navigator)) return;
+
+    let active = true;
+
+    navigator.serviceWorker
+      .register("/sw.js", { updateViaCache: "none" })
+      .then((registration) => {
+        if (active) {
+          registration.update().catch(() => {});
+        }
+      })
+      .catch((error) => {
+        console.error("TIIF Service Worker registration failed:", error);
       });
-    }
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   return null;

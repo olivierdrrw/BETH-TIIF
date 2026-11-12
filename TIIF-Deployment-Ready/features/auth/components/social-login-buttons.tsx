@@ -40,11 +40,45 @@ export function SocialLoginButtons() {
       const credential = await action();
       setUser(credential.user);
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const details =
+        err && typeof err === "object"
+          ? err as { code?: unknown; message?: unknown }
+          : {};
+
+      const code = typeof details.code === "string" ? details.code : "";
+      const message = typeof details.message === "string" ? details.message : "";
+
+      console.error("[TIIF social sign-in]", {
+        provider: id,
+        code,
+        message,
+      });
+
+      const messages: Record<string, string> = {
+        "auth/unauthorized-domain":
+          "This website domain is not authorized in Firebase Authentication.",
+        "auth/operation-not-allowed":
+          "This sign-in provider has not been enabled in Firebase.",
+        "auth/popup-blocked":
+          "Your browser blocked the sign-in popup. Allow popups and retry.",
+        "auth/popup-closed-by-user":
+          "The sign-in popup was closed before authentication completed.",
+        "auth/cancelled-popup-request":
+          "Another sign-in popup is already open. Please retry.",
+        "auth/network-request-failed":
+          "A network error interrupted sign-in. Check your connection.",
+        "permission-denied":
+          "Sign-in may have succeeded, but TIIF could not access your user profile. Check Firestore rules.",
+        "firestore/permission-denied":
+          "TIIF could not access your user profile. Check Firestore rules.",
+      };
+
       setError(
-        err?.code === "auth/operation-not-allowed"
-          ? "This sign-in method isn't enabled yet."
-          : "Sign-in was cancelled or failed."
+        messages[code] ||
+        (/unexpected end of json input/i.test(message)
+          ? "A sign-in or profile request returned an incomplete response. Please retry and check the browser Network tab."
+          : "Sign-in failed. Open the browser Console for the exact TIIF error.")
       );
     } finally {
       setLoadingId(null);
